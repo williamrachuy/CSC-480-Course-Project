@@ -236,10 +236,17 @@ def mainGame(movementInfo):
 
     temptime = time.time()
     while True:
-        if(time.time() > temptime + .6):
-            # Keeps the bird flapping at the same approximate height
+        if(time.time() > (temptime + .6) and upperPipes[0]['x'] > SCREENWIDTH):
+            # Keeps the bird flapping at the same approximate height before the first pipe
             FakeKey()
             temptime = time.time()
+        if(playerx < lowerPipes[0]['x'] + IMAGES['player'][0].get_width() + IMAGES['player'][0].get_width()/2):
+            # Gets the bird at the right height to flap between the pipes
+            if(not playery < lowerPipes[0]['y'] - 35):
+                FakeKey()
+        elif(not playery < lowerPipes[1]['y'] - 35):
+            # Begins looking ahead to the next pipe to line up while the old pipe is still on screen
+            FakeKey()
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -258,6 +265,7 @@ def mainGame(movementInfo):
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
+            print(score)
             return {
                 'y': playery,
                 'groundCrash': crashTest[1],
