@@ -65,6 +65,7 @@ def main():
     FPSCLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
     pygame.display.set_caption('Flappy Bird')
+    print("score playery pipey")
 
     # numbers sprites for score display
     IMAGES['numbers'] = (
@@ -155,7 +156,6 @@ def reflexFlap(temptime, lowerPipes, upperPipes, playerx, playery, last_flap):
         if(not playery < lowerPipes[0]['y'] - 35 and (not playery < upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())):
             FakeKey()
             last_flap = "1stFlap"
-        #print(playery, upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())
     elif(not playery < lowerPipes[1]['y'] - 35 and playerx > lowerPipes[0]['x']):
         # or playerx < lowerPipes[0]['x'] + IMAGES['player'][0].get_width()
         # Begins looking ahead to the next pipe to line up while the old pipe is still on screen
@@ -277,7 +277,7 @@ def mainGame(movementInfo):
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
-            print(score, last_flap, playery, lowerPipes)
+            print(score, ",", playery, ",", upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())
             return {
                 'y': playery,
                 'groundCrash': crashTest[1],
@@ -489,10 +489,10 @@ def checkCrash(player, upperPipes, lowerPipes):
             lCollide = pixelCollision(playerRect, lPipeRect, pHitMask, lHitmask)
 
             if uCollide or lCollide:
-                if uCollide:
+                """if uCollide:
                     print('upper pipe ', end='')
                 else:
-                    print('lower pipe ', end='')
+                    print('lower pipe ', end='')"""
                 return [True, False]
 
     return [False, False]
