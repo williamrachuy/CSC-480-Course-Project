@@ -146,6 +146,8 @@ def FakeKey():
 
 def reflexFlap(temptime, lowerPipes, upperPipes, playerx, playery, last_flap):
     """Chooses if the reflex agent should flap"""
+    if(playery < 0):
+        print("how?")
     if(FPSCLOCK.get_time() > (temptime + FPS) and lowerPipes[0]['x'] > SCREENWIDTH):
         # Keeps the bird flapping at the same approximate height before the first pipe
         FakeKey()
@@ -153,10 +155,11 @@ def reflexFlap(temptime, lowerPipes, upperPipes, playerx, playery, last_flap):
         last_flap = "InitFlap"
     elif(playerx < lowerPipes[0]['x'] + IMAGES['player'][0].get_width() + IMAGES['player'][0].get_width()/2):
         # Gets the bird at the right height to flap between the pipes
-        if(not playery < lowerPipes[0]['y'] - 35 and (not playery < upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())):
+        if(not playery < lowerPipes[0]['y'] - IMAGES['player'][0].get_width()):
+            # and (not playery < upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())
             FakeKey()
             last_flap = "1stFlap"
-    elif(not playery < lowerPipes[1]['y'] - 35 and playerx > lowerPipes[0]['x']):
+    elif(not playery < lowerPipes[1]['y'] - IMAGES['player'][0].get_width() and playerx > lowerPipes[0]['x']):
         # or playerx < lowerPipes[0]['x'] + IMAGES['player'][0].get_width()
         # Begins looking ahead to the next pipe to line up while the old pipe is still on screen
         FakeKey()
