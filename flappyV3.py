@@ -8,7 +8,7 @@ import pygame
 from pygame.locals import *
 
 
-FPS = 3000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 # amount by which base can maximum shift to left
