@@ -8,7 +8,7 @@ import pygame
 from pygame.locals import *
 
 
-FPS = 30
+FPS = 3000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 # amount by which base can maximum shift to left
@@ -65,7 +65,6 @@ def main():
     FPSCLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
     pygame.display.set_caption('Flappy Bird')
-    print("score playery pipey")
 
     # numbers sprites for score display
     IMAGES['numbers'] = (
@@ -138,12 +137,6 @@ def main():
         crashInfo = mainGame(movementInfo)
         showGameOverScreen(crashInfo)
 
-def FakeKey():
-    """Fakes space keystroke for the bird"""
-    keyboard = Controller()
-    keyboard.press(' ')
-    keyboard.release(' ')
-
 def reflexFlap(temptime, lowerPipes, upperPipes, playerx, playery, last_flap):
     """Chooses if the reflex agent should flap"""
     if(playery < 0):
@@ -188,6 +181,7 @@ def showWelcomeAnimation():
 
     while True:
         #FakeKey() # Begins the game
+        # make first flap sound and return values for mainGame
         SOUNDS['wing'].play()
         return {
             'playery': playery + playerShmVals['val'],
@@ -198,14 +192,6 @@ def showWelcomeAnimation():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                # make first flap sound and return values for mainGame
-                SOUNDS['wing'].play()
-                return {
-                    'playery': playery + playerShmVals['val'],
-                    'basex': basex,
-                    'playerIndexGen': playerIndexGen,
-                }
 
         # adjust playery, playerIndex, basex
         if (loopIter + 1) % 5 == 0:
@@ -275,21 +261,15 @@ def mainGame(movementInfo):
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if playery > -2 * IMAGES['player'][0].get_height():
-                    playerVelY = playerFlapAcc
-                    playerFlapped = True
-                    SOUNDS['wing'].play()
-            if playery > -2 * IMAGES['player'][0].get_height():
-                playerVelY = playerFlapAcc
-                playerFlapped = True
-                SOUNDS['wing'].play()
+            """Removing keypress capability outside the reflex agent"""
 
         # check for crash here
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
-            print(score, ",", playery, ",", upperPipes[0]['y'] + IMAGES['pipe'][0].get_height())
+            with open('scores.txt', 'a') as file:
+                file.write(str(score) + "\n")
+
             return {
                 'y': playery,
                 'groundCrash': crashTest[1],
@@ -398,9 +378,6 @@ def showGameOverScreen(crashInfo):
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if playery + playerHeight >= BASEY - 1:
-                    return
 
         # player y shift
         if playery + playerHeight < BASEY - 1:
@@ -503,10 +480,6 @@ def checkCrash(player, upperPipes, lowerPipes):
             lCollide = pixelCollision(playerRect, lPipeRect, pHitMask, lHitmask)
 
             if uCollide or lCollide:
-                """if uCollide:
-                    print('upper pipe ', end='')
-                else:
-                    print('lower pipe ', end='')"""
                 return [True, False]
 
     return [False, False]
