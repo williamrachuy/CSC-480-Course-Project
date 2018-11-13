@@ -25,14 +25,22 @@ from keras.optimizers import Adam
 #                                   Constants
 # -----------------------------------------------------------------------------
 
+# Learning Constants
+LOAD            = 1
+TRAIN_START     = 50
+INFINITE        = False
+
+# Speed Constants
+SLEEP           = 0
+FPS             = 450
+
 # Agent Constants
 EPOCHS          = 1000
 STATE_SIZE      = 3
 ACTION_SIZE     = 2
-BATCH_SIZE      = 32
+BATCH_SIZE      = 10
 
 # Flappy Bird Display
-FPS             = 30
 SCREENWIDTH     = 288
 SCREENHEIGHT    = 512
 BASEY           = SCREENHEIGHT * 0.79
@@ -252,7 +260,7 @@ def showWelcomeAnimation():
 
     # Wait 1 seconds, then start
     t = time.time()
-    while time.time() - t < 1:
+    while time.time() - t < SLEEP:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -296,6 +304,7 @@ def mainGame(movementInfo):
     newPipe1 = getRandomPipe()
     newPipe2 = getRandomPipe()
 
+    '''
     # list of upper pipes
     upperPipes = [
         {'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
@@ -307,6 +316,20 @@ def mainGame(movementInfo):
         {'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
         {'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
     ]
+    '''
+
+    # list of upper pipes
+    upperPipes = [
+        {'x': SCREENWIDTH / 2, 'y': newPipe1[0]['y']},
+        {'x': SCREENWIDTH, 'y': newPipe2[0]['y']},
+    ]
+
+    # list of lowerpipe
+    lowerPipes = [
+        {'x': SCREENWIDTH / 2, 'y': newPipe1[1]['y']},
+        {'x': SCREENWIDTH, 'y': newPipe2[1]['y']},
+    ]
+ 
 
     pipeVelX = -4
 
@@ -321,14 +344,17 @@ def mainGame(movementInfo):
     playerFlapAcc =  -9   # players speed on flapping
     playerFlapped = False # True when player flaps
 
+    # TODO TODO TODO
     # Initial game state
-    distanceToPipe = lowerPipes[0]['x'] - playerx
-    pipeHeight = lowerPipes[0]['y']
-    playerHeight = playery
-    state = np.array([distanceToPipe, pipeHeight, playerHeight])
+    deltaX = lowerPipes[0]['x'] - playerx
+    deltaY = lowerPipes[0]['y'] - playery
+    state = np.array([deltaX, deltaY, playerVelY])
     state = np.reshape(state, [1, STATE_SIZE])
+    # TODO TODO TODO
 
     while True:
+
+        playerScored = False
 
         # Manual input
         for event in pygame.event.get():
@@ -353,19 +379,6 @@ def mainGame(movementInfo):
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
 
-        # Assign reward based on result
-        # TODO better reward calcs
-        pipeH = IMAGES['pipe'][0].get_height()        
-        if (playery < lowerPipes[0]['y'] and \
-                playery > upperPipes[0]['y']+pipeH):
-            reward = 0.005
-        else:
-            reward = -10
-        done = False
-        if crashTest[0]:
-            reward = -100
-            done = True
-
         # Store crash info if the game is over
         if crashTest[0]:
             crashInfo = {
@@ -386,6 +399,20 @@ def mainGame(movementInfo):
             if pipeMidPos <= playerMidPos < pipeMidPos + 4:
                 score += 1
                 SOUNDS['point'].play()
+                playerScored = True
+
+        # TODO TODO TODO
+        # Assign reward based on result
+        if crashTest[0]:
+            reward = -10
+            done = True
+        elif playerScored:
+            reward = 1
+            done = False
+        else:
+            reward = 0
+            done = False
+        # TODO TODO TODO
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
@@ -441,18 +468,21 @@ def mainGame(movementInfo):
         if playerRot <= playerRotThr:
             visibleRot = playerRot
         
+        # TODO TODO TODO 
         # Get the next game state
-        distanceToPipe = lowerPipes[0]['x'] - playerx
-        pipeHeight = lowerPipes[0]['y']
-        playerHeight = playery
-        next_state = np.array([distanceToPipe, pipeHeight, playerHeight])
+        deltaX = lowerPipes[0]['x'] - playerx
+        deltaY = lowerPipes[0]['y'] - playery
+        next_state = np.array([deltaX, deltaY, playerVelY])
         next_state = np.reshape(next_state, [1, STATE_SIZE])
+        # TODO TODO TODO
 
-        # Train the agent and update the state
+        # TODO TODO TODO
+        # Train the agent every 100 epochs and update the state
         agent.remember(state, action, reward, next_state, done)
         state = next_state
-        if len(agent.memory) > BATCH_SIZE:
-                agent.replay(BATCH_SIZE)
+        if len(agent.memory) % TRAIN_START == 0:
+            agent.replay(BATCH_SIZE)
+        # TODO TODO TODO
 
         # Return if crashed
         if crashTest[0]:
@@ -496,7 +526,7 @@ def showGameOverScreen(crashInfo):
                 sys.exit()
                 
         if playery + playerHeight >= BASEY - 1:
-            time.sleep(1)
+            time.sleep(SLEEP)
             return score
 
         # player y shift
@@ -528,7 +558,7 @@ def showGameOverScreen(crashInfo):
         FPSCLOCK.tick(FPS)
         pygame.display.update()
 
-    time.sleep(1)
+    time.sleep(SLEEP)
     return score
 
 
@@ -653,8 +683,10 @@ def translate(value, leftMin, leftMax, rightMin, rightMax):
 # -----------------------------------------------------------------------------
 
 def train():
-    # agent.load("./save/cartpole-dqn.h5")
-    for e in range(EPOCHS):
+    if LOAD:
+        agent.load("./save/FlappyAgent.h5")
+    e = 0
+    while e < EPOCHS or INFINITE:
         setGameSettings()
         movementInfo = showWelcomeAnimation()
         crashInfo = mainGame(movementInfo)
@@ -665,6 +697,8 @@ def train():
         
         if e % 10 == 0:
             agent.save("./save/FlappyAgent.h5")
+
+        e+=1
 
 
 # -----------------------------------------------------------------------------
