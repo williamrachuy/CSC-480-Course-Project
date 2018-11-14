@@ -16,7 +16,7 @@ import time
 import gym
 import numpy as np
 from collections import deque
-from keras.models import Sequential
+from keras.models import Sequential, model_from_json
 from keras.layers import Dense
 from keras.optimizers import Adam
 
@@ -101,6 +101,8 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
+        if LOAD:
+            self.epsilon = self.epsilon_min
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
@@ -110,6 +112,7 @@ class DQNAgent:
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
+        print("first...........")
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -135,10 +138,24 @@ class DQNAgent:
             self.epsilon *= self.epsilon_decay
 
     def load(self, name):
-        self.model.load_weights(name)
+        json_file = open(name+".json", "r")
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.model = model_from_json(loaded_model_json)
+        # load weights into new model
+        self.model.load_weights(name+".h5")
+        self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        print("second...........")
+
 
     def save(self, name):
-        self.model.save_weights(name)
+        # serialize model to JSON
+        model_json = self.model.to_json()
+        json_file = open(name+".json", "w")
+        json_file.write(model_json)
+        json_file.close()
+        # serialize weights to HDF5
+        self.model.save_weights(name+".h5")
 
 
 # -----------------------------------------------------------------------------
@@ -684,7 +701,7 @@ def translate(value, leftMin, leftMax, rightMin, rightMax):
 
 def train():
     if LOAD:
-        agent.load("./save/FlappyAgent.h5")
+        agent.load("./save/FlappyAgent")
     e = 0
     while e < EPOCHS or INFINITE:
         setGameSettings()
@@ -696,7 +713,7 @@ def train():
             .format(e, EPOCHS, score, agent.epsilon))
         
         if e % 10 == 0:
-            agent.save("./save/FlappyAgent.h5")
+            agent.save("./save/FlappyAgent")
 
         e+=1
 
