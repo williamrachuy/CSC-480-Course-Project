@@ -7,7 +7,7 @@ import pygame
 from pygame.locals import *
 
 # Speed Constants
-FPS = 3000
+FPS = 30
 
 # Flappy Bird Display
 SCREENWIDTH  = 288
@@ -139,9 +139,9 @@ def main():
         movementInfo = showWelcomeAnimation()
         crashInfo = mainGame(movementInfo)
         showGameOverScreen(crashInfo)
-        with open('scores/ReflexScores12.txt', 'a') as file:
-            file.write(str(crashInfo['score']) + "\n")
-        print(gameCount)
+        #with open('scores/ReflexScores.txt', 'a') as file:
+        #    file.write(str(crashInfo['score']) + "\n")
+        #print(gameCount)
         gameCount = gameCount + 1
 
 def reflexFlap(temptime, lowerPipes, upperPipes, playerx, playery, last_flap):
